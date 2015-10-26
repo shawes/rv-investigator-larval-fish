@@ -41,9 +41,10 @@ printGraphForFish <- function(countdata) {
 performFishersTest <- function(df) {
   matrix <- acast(df,Depth ~ Stage,value.var="Count")
   ft <- fisher.test(matrix,alternative="two.sided")
-  ft
+  print(ft)
   if(ft$p.value < 0.05)  {
-    fisher.multcomp(matrix,"bonferroni")
+    mult <- fisher.multcomp(matrix,"bonferroni")
+    print(mult)
   }
   return(ft)
 }
@@ -55,7 +56,7 @@ myData <- read.csv('flexion_data2.csv', colClasses = c("factor","factor","charac
 by_stage <- group_by(myData, Depth, Stage)
 
 labrids <- summarise(by_stage, Count = sum(Labridae))
-performFishersTest(labrids)
+result <- performFishersTest(labrids)
 printGraphForFish(labrids)
 
 scarids <- summarise(by_stage, Count = sum(Scaridae))

@@ -1,0 +1,154 @@
+---
+title: Proportion of reef fish at depth by ontogenetic stage in the top 100m (Preliminary
+  data!)
+author: "Steve Hawes"
+date: "26 October 2015"
+output: html_document
+---
+
+## Overview 
+
+Proportions of stages of ontogeny of reef associated fish caught at 3 depths on the RV Investigator 2015
+
+## Importing data and libraries
+
+Libraries used in this code
+```{r,warning:FALSE,results:hold}
+library("ggplot2") # Graphics 
+library("dplyr") # Arranging data
+library("reshape2") # Reshaping data
+library("RVAideMemoire") # Fisher multiple comparisons
+```
+
+My data imported from my excel spreadsheet. I have printed out the first 5 rows so you get the idea. I also grouped the data by the factors of Depth and then Stage.
+```{r,results='hold'}
+load("~/Development/rv-investigator-larval-fish/fishes.RData")
+str(fishes)
+fishes <- group_by(fishes, Depth, Stage)
+head(fishes)
+```
+
+## Functions
+
+1. getProportions() produces the proportions of each stage at each depth of the given data frame. It uses the mutate function from reshape2 to add the proprtions as an extra column
+```{r}
+getProportions <- function(df){
+  df$Sum[df$Stage == 'Preflexion'] = sum(df$Count[df$Stage == 'Preflexion'])
+  df$Sum[df$Stage == 'Flexion'] = sum(df$Count[df$Stage == 'Flexion'])
+  df$Sum[df$Stage == 'Postflexion'] = sum(df$Count[df$Stage == 'Postflexion'])
+  df = mutate(df, Prop = Count / Sum)
+  return(df)
+}
+```
+
+2. graphBuilder() uses ggplot2 to produce a line graph to visualise the differences in proportions. I might change the layout of the graph, its not entirely intuitive at the moment.
+```{r,tidy=TRUE}
+graphBuilder <- function(df){
+  
+  # Order the factors to print nicely on x-axis
+  df$Depth <- factor(df$Depth,levels=c("Surface","Top","Bottom"))
+  
+  graph <- ggplot(df, 
+                  aes(x = Depth, y = Prop, fill = Stage, group=Stage, shape=Stage, colour=Stage, ymax=1.0, ymin=0)) +
+    geom_line(size=1) +
+    geom_point(size=2) +
+    scale_y_continuous(breaks = seq(0, 1.0, 0.1), 
+                       limits = c(0, 1.0), 
+                       expand = c(0, 0)) +
+    scale_x_discrete(labels=c("0-3","3-50","50-100")) +
+    labs(x = "Depth (m)", y = "Proportion") +
+    scale_colour_brewer(palette="Dark2") +
+    theme(text = element_text(size=10))
+  return(graph)
+}
+```
+
+3. printGraphForFish() is just a placer function to cut down on repeated code
+```{r}
+printGraphForFish <- function(df) {
+  prop <- getProportions(df)
+  graphBuilder(prop)
+}
+```
+
+4. performFishersTest() performs the Fisher's exact test to see if the proportions are significantly different by depth. It uses the reshape2 package's acast() function to convert the data into a matrix format, with rows of Depth and columns of Stage, populated by the count variable. If the two sided fishers exact test is significant, a post-hoc of multiple comparisons using 2x2 fisher's exact tests are used - corrected using a bonferroni approach
+```{r,tidy=TRUE}
+performFishersTest <- function(df) {
+  matrix <- acast(df,Depth ~ Stage,value.var="Count")
+  ft <- fisher.test(matrix,alternative="two.sided")
+  print(ft)
+  if(ft$p.value < 0.05)  {
+    mult <- fisher.multcomp(matrix,"bonferroni")
+    print(mult)
+  }
+  return(ft)
+}
+```
+
+##Preliminary Results
+
+###Wrasse
+It uses the dplyr package to sum all the count data - the totals are needed to calculate the proportions. I also print out the total idenfieid and staged so far.
+```{r}
+labrids <- summarise(fishes, Count = sum(Labridae))
+sum(labrids$Count)
+result <- performFishersTest(labrids)
+printGraphForFish(labrids)
+```
+
+###Parrotfish
+```{r}
+scarids <- summarise(fishes, Count = sum(Scaridae))
+sum(scarids$Count)
+result <- performFishersTest(scarids)
+printGraphForFish(scarids)
+```
+
+###Flounder
+```{r}
+bothids <- summarise(fishes, Count = sum(Bothidae))
+sum(bothids$Count)
+result <- performFishersTest(bothids)
+printGraphForFish(bothids)
+```
+
+###Scorpionfish
+```{r}
+scorpids <- summarise(fishes, Count = sum(Scorpaenidae))
+sum(scorpids$Count)
+result <- performFishersTest(scorpids)
+printGraphForFish(scorpids)
+```
+
+###Sea basses & Groupers
+```{r}
+serranids <- summarise(fishes, Count = sum(Serranidae))
+sum(serranids$Count)
+result <- performFishersTest(serranids)
+printGraphForFish(serranids)
+```
+
+###Lizardfish
+```{r}
+synodontids <- summarise(fishes, Count = sum(Synodontidae))
+sum(synodontids$Count)
+result <- performFishersTest(synodontids)
+printGraphForFish(synodontids)
+```
+
+###Goatfish
+```{r}
+mullids <- summarise(fishes, Count = sum(Mullidae))
+sum(mullids$Count)
+result <- performFishersTest(mullids)
+printGraphForFish(mullids)
+```
+
+###Damselfish
+```{r}
+pomacentrids <- summarise(fishes, Count = sum(Pomacentridae))
+sum(pomacentrids$Count)
+result <- performFishersTest(pomacentrids)
+printGraphForFish(pomacentrids)
+```
+
