@@ -88,13 +88,14 @@ performFishersTest <- function(df) {
 ##Preliminary Results
 
 ###Wrasse
-It uses the dplyr package to sum all the count data - the totals are needed to calculate the proportions. I also print out the total idenfieid and staged so far.
+It uses the dplyr package to sum all the count data - the totals are needed to calculate the proportions. 
 ```{r}
 labrids <- summarise(fishes, Count = sum(Labridae))
-sum(labrids$Count)
+n <- sum(labrids$Count)
 result <- performFishersTest(labrids)
 printGraphForFish(labrids)
 ```
+There were `r n` labrids staged so far
 
 ###Parrotfish
 ```{r}
