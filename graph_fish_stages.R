@@ -1,39 +1,32 @@
 library("ggplot2")
 library("dplyr")
 library("reshape2")
+library("ca")
+library("vcd")
 library("RVAideMemoire")
 
 ontogenydata <- read.csv('ovm_tidied.csv',skip = 2,nrows = 172) ## 172 is the first 16 sites
 names(ontogenydata) <- tolower(names(ontogenydata))
 
-scarids <- subset(ontogenydata,select = c("site","depth","pre_scaridae","fle_scaridae","pos_scaridae"))
-names(scarids) <- c("site","depth","preflexion","flexion","postflexion")
-scaridmelt <- melt(scarids, id.vars = c("site","depth"),
-                   measure.vars = c("preflexion","flexion","postflexion"),
-                   variable.name = "stage")
-scaridmelt <- group_by(scaridmelt, depth, stage)
+getFishData <- function(df,pre.name,fle.name,post.name){
+  fish <- subset(df,select = c("site","depth", pre.name, fle.name, post.name))
+  names(fish) <- c("site","depth","preflexion","flexion","postflexion")
+  fishmelt <- melt(fish, id.vars = c("site","depth"),
+                          measure.vars = c("preflexion","flexion","postflexion"),
+                          variable.name = "stage")
+  fishmelt <- group_by(fishmelt, depth, stage)
+  fishmelt
+}
 
-poms <- subset(ontogenydata,select = c("site","depth","pre_pomacentridae","fle_pomacentridae","pos_pomacentridae"))
-names(poms) <- c("site","depth","preflexion","flexion","postflexion")
-pomsmelt <- melt(poms, id.vars = c("site","depth"),
-                   measure.vars = c("preflexion","flexion","postflexion"),
-                   variable.name = "stage")
-pomsmelt <- group_by(pomsmelt, depth, stage)
-
-labrids <- subset(ontogenydata,select = c("site","depth","pre_labridae","fle_labridae","pos_labridae"))
-names(labrids) <- c("site","depth","preflexion","flexion","postflexion")
-labridsmelt <- melt(labrids, id.vars = c("site","depth"),
-                 measure.vars = c("preflexion","flexion","postflexion"),
-                 variable.name = "stage")
-labridsmelt <- group_by(labridsmelt, depth, stage)
-
-serranids <- subset(ontogenydata,select = c("site","depth","pre_serranidae","fle_serranidae","pos_serranidae"))
-names(serranids) <- c("site","depth","preflexion","flexion","postflexion")
-serranidsmelt <- melt(serranids, id.vars = c("site","depth"),
-                    measure.vars = c("preflexion","flexion","postflexion"),
-                    variable.name = "stage")
-serranidsmelt <- group_by(serranidsmelt, depth, stage)
-
+synodontids <- getFishData(ontogenydata,"pre_synodontidae","fle_synodontidae","pos_synodontidae")
+serranids <- getFishData(ontogenydata,"pre_serranidae","fle_serranidae","pos_serranidae")
+pomacentrids <- getFishData(ontogenydata,"pre_pomacentridae","fle_pomacentridae","pos_pomacentridae")
+mullids <- getFishData(ontogenydata,"pre_mullidae","fle_mullidae","pos_mullidae")
+labrids <- getFishData(ontogenydata,"pre_labridae","fle_labridae","pos_labridae")
+scarids <- getFishData(ontogenydata,"pre_scaridae","fle_scaridae","pos_scaridae")
+bothids <- getFishData(ontogenydata,"pre_bothidae","fle_bothidae","pos_bothidae")
+triglids <- getFishData(ontogenydata,"pre_triglidae","fle_triglidae","pos_triglidae")
+scorpids <- getFishData(ontogenydata,"pre_scorpaenidae","fle_scorpaenidae","pos_scorpaenidae")
 
 ## Calculate the proportions of each stage per depth
 getProportions <- function(data){
@@ -64,18 +57,21 @@ graphBuilder <- function(data){
   return(graph)
 }
 
-printGraphForFish <- function(countdata) {
+printLineGraphForFish <- function(countdata) {
   prop <- getProportions(countdata)
   graphBuilder(prop)
 }
 
-performFishersTest <- function(df) {
-  matrix <- acast(df,depth ~ stage,value.var="count")
+printMosaicGraphForFish <- function(countdata) {
+  matrix <- acast(countdata,depth ~ stage,value.var="count")
   print(matrix)
   plot(ca(matrix))
-  require(vcd)
   mosaic(matrix,shade=T,legend=T)
   assoc(matrix,shade=T,legend=T)
+}
+
+performFishersTest <- function(countdata) {
+  matrix <- acast(countdata,depth ~ stage,value.var="count")
   ft <- fisher.test(matrix,alternative="two.sided")
   print(ft)
   if(ft$p.value < 0.05)  {
@@ -85,48 +81,50 @@ performFishersTest <- function(df) {
   return(ft)
 }
 
-## Read in the CSV
-myData <- read.csv('flexion_data2.csv', colClasses = c("factor","factor","character","factor","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
-
-## Group data by depth and then stage
-by_stage <- group_by(myData, Depth, Stage)
-
-labrids <- summarise(labridsmelt, count = sum(value))
-performFishersTest(labrids)
-printGraphForFish(labrids)
-
-scarids <- summarise(scaridmelt, count = sum(value))
-performFishersTest(scarids)
-printGraphForFish(scarids)
-
-bothids <- summarise(by_stage, count = sum(value))
-performFishersTest(bothids)
-printGraphForFish(bothids)
-
-scorpids <- summarise(by_stage, count = sum(value))
-performFishersTest(scorpids)
-printGraphForFish(scorpids)
-
-serranids <- summarise(serranidsmelt, count = sum(value))
-performFishersTest(serranids)
-printGraphForFish(serranids)
-
-synodontids <- summarise(by_stage, count = sum(value))
-performFishersTest(synodontids)
-printGraphForFish(synodontids)
-
-mullids <- summarise(by_stage, count = sum(Mullidae))
-performFishersTest(mullids)
-printGraphForFish(mullids)
-
-pomacentrids <- summarise(pomsmelt, count = sum(value))
-performFishersTest(pomacentrids)
-printGraphForFish(pomacentrids)
+performChiSqTest <- function(countdata) {
+  matrix <- acast(countdata,depth ~ stage,value.var="count")
+  ft <- chisq.test(matrix)
+  print(ft)
+  return(ft)
+}
 
 
+labrids.sum <- summarise(labrids, count = sum(value))
+performChiSqTest(labrids.sum)
+printLineGraphForFish(labrids.sum)
+printMosaicGraphForFish(labrids.sum)
 
+scarids.sum <- summarise(scarids, count = sum(value))
+performFishersTest(scarids.sum)
+printLineGraphForFish(scarids.sum)
+printMosaicGraphForFish(scarids.sum)
 
+bothids.sum <- summarise(bothids, count = sum(value))
+performFishersTest(bothids.sum)
+printLineGraphForFish(bothids.sum)
+printMosiacGraphForFish(bothids.sum)
 
+scorpids.sum <- summarise(scorpids, count = sum(value))
+performFishersTest(scorpids.sum)
+printLineGraphForFish(scorpids.sum)
+printMosaicGraphForFish(scorpids.sum)
 
+serranids.sum <- summarise(serranids, count = sum(value))
+performFishersTest(serranids.sum)
+printLineGraphForFish(serranids.sum)
+printMosaicGraphForFish(serranids.sum)
 
+synodontids.sum <- summarise(synodontids, count = sum(value))
+performFishersTest(synodontids.sum)
+printLineGraphForFish(synodontids.sum)
+printMosaicGraphForFish(synodontids.sum)
 
+mullids.sum <- summarise(mullids, count = sum(value))
+performFishersTest(mullids.sum)
+printLineGraphForFish(mullids.sum)
+printMosaicGraphForFish(mullids.sum )
+
+pomacentrids.sum <- summarise(pomacentrids, count = sum(value))
+performFishersTest(pomacentrids.sum)
+printLineGraphForFish(pomacentrids.sum)
+printMosaicGraphForFish(pomacentrids.sum)
