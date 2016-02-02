@@ -5,11 +5,14 @@ library("ca")
 library("vcd")
 library("RVAideMemoire")
 
-ontogenydata <- read.csv('ovm_tidied.csv',skip = 2,nrows = 172) ## 172 is the first 16 sites
+ontogenydata <- read.csv('reef_fish.csv',skip = 2,nrows = 172) ## 172 is the first 16 sites
 names(ontogenydata) <- tolower(names(ontogenydata))
+playdata <- group_by(ontogenydata,site,depth,net,type,location)
+summarise(playdata)
 
 getFishData <- function(df,pre.name,fle.name,post.name){
-  fish <- subset(df,select = c("site","depth", pre.name, fle.name, post.name))
+  fish <- subset(df,select = c("site","depth","net","type","location", pre.name, fle.name, post.name))
+  
   names(fish) <- c("site","depth","preflexion","flexion","postflexion")
   fishmelt <- melt(fish, id.vars = c("site","depth"),
                           measure.vars = c("preflexion","flexion","postflexion"),
@@ -38,7 +41,7 @@ getProportions <- function(data){
 }
 
 ## Build the graph
-graphBuilder <- function(data){
+graphBuilder <- function(data,title){
   
   # Order the factors to print nicely on x-axis
   data$depth <- factor(data$depth,levels=c("0","25","75"))
@@ -47,6 +50,7 @@ graphBuilder <- function(data){
                   aes(x = depth, y = prop, fill = stage, group=stage, shape=stage, colour=stage, ymax=1.0, ymin=0)) +
     geom_line(size=1.5) +
     geom_point(size=4) +
+    ggtitle(title) +
     scale_y_continuous(breaks = seq(0, 1.0, 0.1), 
                        limits = c(0, 1.0), 
                        expand = c(0, 0)) +
@@ -57,9 +61,9 @@ graphBuilder <- function(data){
   return(graph)
 }
 
-printLineGraphForFish <- function(countdata) {
+printLineGraphForFish <- function(countdata,title) {
   prop <- getProportions(countdata)
-  graphBuilder(prop)
+  graphBuilder(prop,title)
 }
 
 printMosaicGraphForFish <- function(countdata) {
@@ -91,40 +95,47 @@ performChiSqTest <- function(countdata) {
 
 labrids.sum <- summarise(labrids, count = sum(value))
 performChiSqTest(labrids.sum)
-printLineGraphForFish(labrids.sum)
+printLineGraphForFish(labrids.sum,"Labrid")
 printMosaicGraphForFish(labrids.sum)
 
 scarids.sum <- summarise(scarids, count = sum(value))
 performFishersTest(scarids.sum)
-printLineGraphForFish(scarids.sum)
+printLineGraphForFish(scarids.sum,"Scarid")
 printMosaicGraphForFish(scarids.sum)
 
 bothids.sum <- summarise(bothids, count = sum(value))
 performFishersTest(bothids.sum)
-printLineGraphForFish(bothids.sum)
-printMosiacGraphForFish(bothids.sum)
+printLineGraphForFish(bothids.sum,"Bothid")
+printMosaicGraphForFish(bothids.sum)
 
 scorpids.sum <- summarise(scorpids, count = sum(value))
 performFishersTest(scorpids.sum)
-printLineGraphForFish(scorpids.sum)
+printLineGraphForFish(scorpids.sum,"Scorpid")
 printMosaicGraphForFish(scorpids.sum)
 
 serranids.sum <- summarise(serranids, count = sum(value))
 performFishersTest(serranids.sum)
-printLineGraphForFish(serranids.sum)
+printLineGraphForFish(serranids.sum,"Serranid")
 printMosaicGraphForFish(serranids.sum)
 
 synodontids.sum <- summarise(synodontids, count = sum(value))
 performFishersTest(synodontids.sum)
-printLineGraphForFish(synodontids.sum)
+printLineGraphForFish(synodontids.sum,"Synodontid")
 printMosaicGraphForFish(synodontids.sum)
 
 mullids.sum <- summarise(mullids, count = sum(value))
 performFishersTest(mullids.sum)
-printLineGraphForFish(mullids.sum)
-printMosaicGraphForFish(mullids.sum )
+printLineGraphForFish(mullids.sum,"Mullid")
+printMosaicGraphForFish(mullids.sum)
 
 pomacentrids.sum <- summarise(pomacentrids, count = sum(value))
 performFishersTest(pomacentrids.sum)
-printLineGraphForFish(pomacentrids.sum)
+printLineGraphForFish(pomacentrids.sum,"Pomacentrid")
 printMosaicGraphForFish(pomacentrids.sum)
+
+matrix <- acast(pomacentrids.sum,depth ~ stage,value.var="count")
+ca(matrix)
+
+library(MASS)
+answer <- loglm(formula=~depth+stage,data=pomacentrids.sum)
+deviance(answer)
