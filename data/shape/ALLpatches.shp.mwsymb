@@ -1,0 +1,38 @@
+<MapWinGIS OcxVersion="4.8" FileType="LayerFile" FileVersion="0" Description="">
+  <Layer LayerType="Shapefile" LayerName="ALLpatches" LayerVisible="1" LayerKey="" Filename="">
+    <ShapefileClass>
+      <DefaultDrawingOptions FillColor="14076871" LineColor="9868950" />
+      <ShapefileCategoriesClass ClassificationField="0" FieldType="0">
+        <ShapefileCategoryClass Name="Beach" Expression="[HABITAT] = &quot;Beach&quot;" Value="Beach">
+          <ShapeDrawingOptionsClass LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Land" Expression="[HABITAT] = &quot;Land&quot;" Value="Land">
+          <ShapeDrawingOptionsClass FillColor="31743" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Mangrove" Expression="[HABITAT] = &quot;Mangrove&quot;" Value="Mangrove">
+          <ShapeDrawingOptionsClass FillColor="53759" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Other" Expression="[HABITAT] = &quot;Other&quot;" Value="Other">
+          <ShapeDrawingOptionsClass FillColor="2423780" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Reef" Expression="[HABITAT] = &quot;Reef&quot;" Value="Reef">
+          <ShapeDrawingOptionsClass FillColor="9498256" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Rocky intertidal" Expression="[HABITAT] = &quot;Rocky intertidal&quot;" Value="Rocky intertidal">
+          <ShapeDrawingOptionsClass FillColor="13688485" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Saltmarsh" Expression="[HABITAT] = &quot;Saltmarsh&quot;" Value="Saltmarsh">
+          <ShapeDrawingOptionsClass FillColor="15887447" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Seagrass" Expression="[HABITAT] = &quot;Seagrass&quot;" Value="Seagrass">
+          <ShapeDrawingOptionsClass FillColor="16255522" LineColor="9868950" />
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="Subtidal sand" Expression="[HABITAT] = &quot;Subtidal sand&quot;" Value="Subtidal sand">
+          <ShapeDrawingOptionsClass FillColor="14822282" LineColor="9868950" />
+        </ShapefileCategoryClass>
+      </ShapefileCategoriesClass>
+      <LabelsClass Generated="0" AutoOffset="0" AvoidCollisions="0" Positioning="1" TextRenderingHint="5" />
+      <ChartsClass ValuesFontName="" />
+    </ShapefileClass>
+  </Layer>
+</MapWinGIS>
